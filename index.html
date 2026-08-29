@@ -75,7 +75,6 @@
         .reveal-right { opacity: 0; transform: translateX(30px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
         .reveal-right.active { opacity: 1; transform: translateX(0); }
 
-        /* Изображения гармонично обесцвечиваются под дизайн и становятся цветными при наведении */
         .img-container { overflow: hidden; position: relative; }
         .img-container img { transition: transform 0.5s ease, filter 0.5s ease; filter: grayscale(80%) contrast(1.1) brightness(0.9); }
         .img-container:hover img { transform: scale(1.05); filter: grayscale(0%) contrast(1) brightness(1); }
@@ -169,6 +168,30 @@
             0% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
         }
+
+        /* --- СТИЛИ ДЛЯ ВРАЖЕСКИХ ДРОНОВ --- */
+        .drone-target {
+            position: absolute;
+            font-size: 2.2rem;
+            color: #8a929a; /* Стальной цвет */
+            pointer-events: none;
+            z-index: 25;
+            transition: top 5s linear; /* Скорость падения дрона */
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.8));
+        }
+        
+        .drone-explosion {
+            font-size: 4rem;
+            transition: none !important;
+            animation: explode 0.4s ease-out forwards;
+            z-index: 26;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(0.5); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.9; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
     </style>
 </head>
 <body class="font-roboto antialiased select-none">
@@ -178,8 +201,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 sm:h-20">
                 <div class="flex-shrink-0 flex items-center">
-                    <!-- ЛОГОТИП В МЕНЮ (01.png) -->
-                    <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/100x100/171717/8a929a?text=108'" alt="108 Logo" class="h-10 w-10 sm:h-12 sm:w-12 object-contain mr-3 filter drop-shadow">
+                    <!-- Логотип обрезается rounded-xl чтобы скрыть белые углы -->
+                    <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/100x100/171717/8a929a?text=108'" alt="108 Logo" class="h-10 w-10 sm:h-12 sm:w-12 object-contain mr-3 filter drop-shadow rounded-xl">
                     <span class="font-oswald font-bold text-lg sm:text-xl tracking-wider text-military-accent uppercase">108 ДШБ</span>
                 </div>
                 
@@ -201,7 +224,6 @@
             </div>
         </div>
 
-        <!-- Мобильное меню -->
         <div class="md:hidden hidden absolute top-full left-0 w-full bg-[#0a0a0a] border-b border-white/10 shadow-2xl z-50" id="mobile-menu">
             <div class="px-4 pt-3 pb-6 space-y-3">
                 <a href="#home" onclick="toggleMobileMenu()" class="text-gray-300 hover:text-white block px-3 py-3 text-lg font-medium font-oswald uppercase border-b border-white/5">Главная</a>
@@ -217,6 +239,9 @@
     <header id="home" class="relative hero-height flex items-center justify-center overflow-hidden parallax-bg">
         <div class="absolute inset-0 overlay-dark z-0"></div>
         <div id="screen-flash"></div>
+        
+        <!-- КОНТЕЙНЕР ДЛЯ ДРОНОВ -->
+        <div id="drone-zone" class="absolute inset-0 overflow-hidden pointer-events-none z-20"></div>
 
         <div id="weapon-mount">
             <div id="weapon-recoil">
@@ -237,9 +262,9 @@
         </div>
 
         <div class="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center mt-12 sm:mt-16">
-            <!-- ГЛАВНЫЙ ЛОГОТИП (01.png) -->
+            <!-- Главный логотип обрезается rounded-3xl (как иконка приложения) для скрытия белого фона -->
             <div class="w-40 h-40 sm:w-56 sm:h-56 mb-4" id="tiltLogo">
-                <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/400x400/0a0a0a/8a929a?text=108+ДШБ'" alt="108 Shield" class="w-full h-full object-contain filter drop-shadow-2xl">
+                <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/400x400/0a0a0a/8a929a?text=108+ДШБ'" alt="108 Shield" class="w-full h-full object-cover filter drop-shadow-2xl rounded-3xl">
             </div>
 
             <h1 class="font-oswald font-bold text-4xl sm:text-6xl lg:text-7xl tracking-tighter uppercase mb-3 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
@@ -248,7 +273,7 @@
             
             <p class="text-sm sm:text-xl text-gray-400 max-w-2xl font-light tracking-wide mb-8">
                 Элита Вооруженных Сил. Мужество, Честь и Отвага.<br>
-                <span class="text-military-accent font-normal text-xs sm:text-base">Ведите пальцем по экрану для перемещения/прицеливания. Тап = Огонь.</span>
+                <span class="text-military-accent font-normal text-xs sm:text-base">Сбивайте вражеские дроны! Ведите пальцем, тап = огонь.</span>
             </p>
             
             <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto px-6 z-20 relative">
@@ -268,7 +293,6 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div class="reveal-left">
                     <div class="img-container border border-white/10 shadow-2xl rounded-sm bg-black">
-                        <!-- ФОТО СОЛДАТА (02.png) -->
                         <img src="02.png" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1595822317185-1d4cb800ba4e?q=80&w=1000&auto=format&fit=crop'" alt="Солдат" class="w-full h-auto object-cover aspect-[4/5] object-top">
                     </div>
                 </div>
@@ -294,7 +318,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Качественные фото арсенала из интернета -->
                 <div class="group relative overflow-hidden bg-black reveal-left rounded-sm border border-white/10 aspect-video">
                     <div class="img-container w-full h-full">
                         <img src="https://images.unsplash.com/photo-1584852955938-f9d784a0d843?q=80&w=1000&auto=format&fit=crop" alt="Пулемет ПКМ" class="w-full h-full object-cover">
@@ -318,7 +341,7 @@
         </div>
     </section>
 
-    <!-- Tactical Specialties Section (С качественными фото) -->
+    <!-- Tactical Specialties Section -->
     <section id="specialties" class="py-16 sm:py-24 bg-military-900 border-t border-b border-white/5">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-2xl mx-auto mb-12 reveal">
@@ -327,10 +350,10 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- БПЛА -->
+                <!-- БПЛА (05.jpg) -->
                 <div class="group border border-white/10 bg-black/40 reveal overflow-hidden flex flex-col rounded-sm">
                     <div class="img-container h-48 w-full border-b border-white/10">
-                        <img src="https://images.unsplash.com/photo-1527430253228-e93688616381?q=80&w=800&auto=format&fit=crop" alt="БПЛА" class="w-full h-full object-cover">
+                        <img src="05.jpg" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1527430253228-e93688616381?q=80&w=800&auto=format&fit=crop'" alt="БПЛА" class="w-full h-full object-cover">
                     </div>
                     <div class="p-6">
                         <i class="fa-solid fa-plane-up text-3xl text-military-accent mb-3 group-hover:text-white transition-colors"></i>
@@ -375,10 +398,10 @@
                     </div>
                 </div>
 
-                <!-- Лодки -->
+                <!-- Лодки (04.png) -->
                 <div class="group border border-white/10 bg-black/40 reveal overflow-hidden flex flex-col rounded-sm">
                     <div class="img-container h-48 w-full border-b border-white/10">
-                        <img src="https://images.unsplash.com/photo-1528150177508-7cc0c36cda5c?q=80&w=800&auto=format&fit=crop" alt="Боевые лодки" class="w-full h-full object-cover">
+                        <img src="04.png" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1528150177508-7cc0c36cda5c?q=80&w=800&auto=format&fit=crop'" alt="Боевые лодки" class="w-full h-full object-cover">
                     </div>
                     <div class="p-6">
                         <i class="fa-solid fa-ship text-3xl text-military-accent mb-3 group-hover:text-white transition-colors"></i>
@@ -415,8 +438,8 @@
     <footer class="bg-black py-8 border-t border-white/10">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center">
-                <!-- ЛОГОТИП В ФУТЕРЕ (01.png) -->
-                <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/100x100/171717/8a929a?text=108'" alt="108 Logo" class="h-8 w-8 object-contain mr-3 opacity-60">
+                <!-- Скругление логотипа в футере -->
+                <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/100x100/171717/8a929a?text=108'" alt="108 Logo" class="h-8 w-8 object-contain mr-3 opacity-60 rounded-lg">
                 <span class="font-oswald text-gray-500 uppercase text-xs sm:text-sm">108 ДШБ © 2026</span>
             </div>
             <div>
@@ -428,14 +451,12 @@
     </footer>
 
     <script>
-        // --- ЗАГРУЗКА ФОНА (02.png) ---
         const heroSection = document.getElementById('home');
         const bgImg = new Image();
         bgImg.src = '02.png'; 
         bgImg.onload = () => { heroSection.style.backgroundImage = "url('02.png')"; };
         bgImg.onerror = () => { heroSection.style.backgroundImage = "url('https://images.unsplash.com/photo-1595822317185-1d4cb800ba4e?q=80&w=2000')"; };
 
-        // --- МОБИЛЬНОЕ МЕНЮ ---
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
             const icon = document.getElementById('menu-icon');
@@ -449,7 +470,6 @@
             }
         }
 
-        // --- ЗВУК ВЫСТРЕЛА ---
         function playSynthesizedGunshot() {
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -478,7 +498,6 @@
             } catch(e) {}
         }
 
-        // --- ФИЗИКА ДВИЖЕНИЯ И ПРИЦЕЛИВАНИЯ ---
         const hero = document.getElementById('home');
         const weaponMount = document.getElementById('weapon-mount');
 
@@ -502,9 +521,35 @@
             weaponMount.style.transform = `translateX(calc(-50% + ${moveX}px)) translateY(${moveY}px) rotate(${angle}deg)`;
         }
 
+        // --- ЛОГИКА ПОПАДАНИЯ ПО ДРОНАМ ---
+        function checkDroneHits(x, y) {
+            const drones = document.querySelectorAll('.drone-target');
+            drones.forEach(drone => {
+                const rect = drone.getBoundingClientRect();
+                // Расширенный хитбокс для удобной стрельбы с телефона (+30px во все стороны)
+                if (x >= rect.left - 30 && x <= rect.right + 30 &&
+                    y >= rect.top - 30 && y <= rect.bottom + 30) {
+                    
+                    drone.classList.remove('drone-target');
+                    drone.classList.add('drone-explosion');
+                    drone.innerHTML = '💥';
+                    
+                    // Замораживаем на месте попадания
+                    drone.style.top = rect.top + 'px'; 
+                    drone.style.left = rect.left + 'px';
+                    
+                    // Удаляем после взрыва
+                    setTimeout(() => drone.remove(), 400);
+                }
+            });
+        }
+
         function triggerFireEffect(x, y) {
             hero.classList.add('shooting');
             playSynthesizedGunshot();
+            
+            // Проверка попаданий в дроны!
+            checkDroneHits(x, y);
 
             const mark = document.createElement('div');
             mark.className = 'target-mark';
@@ -535,7 +580,41 @@
             triggerFireEffect(e.clientX, e.clientY);
         });
 
-        // --- АНИМАЦИЯ ПОЯВЛЕНИЯ ЭЛЕМЕНТОВ ---
+        // --- ГЕНЕРАТОР ВРАЖЕСКИХ ДРОНОВ ---
+        const droneZone = document.getElementById('drone-zone');
+        
+        function spawnDrone() {
+            // Спавним дроны только если мы находимся на главном экране
+            if (window.scrollY > window.innerHeight) return;
+
+            const drone = document.createElement('div');
+            drone.className = 'drone-target';
+            // Используем иконку истребителя/дрона, повернутую вниз
+            drone.innerHTML = '<i class="fa-solid fa-jet-fighter transform rotate-180"></i>';
+            
+            drone.style.top = '-50px';
+            drone.style.left = Math.floor(Math.random() * 80 + 10) + '%';
+            droneZone.appendChild(drone);
+
+            // Запускаем анимацию падения
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    if (drone.parentNode) drone.style.top = '110%';
+                }, 50);
+            });
+
+            // Уничтожаем дрон, если он пролетел мимо экрана и не был взорван
+            setTimeout(() => {
+                if (drone.parentNode && !drone.classList.contains('drone-explosion')) {
+                    drone.remove();
+                }
+            }, 5500);
+        }
+
+        // Спавнить дрон каждые 2.5 секунды
+        setInterval(spawnDrone, 2500);
+
+
         const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
         const revealObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
