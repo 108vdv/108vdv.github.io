@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth overflow-x-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>108 Десантно-Штурмовой Полк</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        oswald: ['Oswald', 'sans-serif'],
+                        roboto: ['Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        military: {
+                            900: '#0a0a0a',
+                            800: '#141414',
+                            accent: '#8a929a',
+                            red: '#8b0000'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        .hero-height {
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        .parallax-bg {
+            background-attachment: scroll;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        @media (min-width: 768px) { .parallax-bg { background-attachment: fixed; } }
+
+        .overlay-dark { background: linear-gradient(to bottom, rgba(10,10,10,0.7) 0%, rgba(10,10,10,0.95) 100%); }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .reveal-left { opacity: 0; transform: translateX(-30px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-left.active { opacity: 1; transform: translateX(0); }
+        .reveal-right { opacity: 0; transform: translateX(30px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-right.active { opacity: 1; transform: translateX(0); }
+
+        /* Изображения гармонично обесцвечиваются под дизайн и становятся цветными при наведении */
+        .img-container { overflow: hidden; position: relative; }
+        .img-container img { transition: transform 0.5s ease, filter 0.5s ease; filter: grayscale(80%) contrast(1.1) brightness(0.9); }
+        .img-container:hover img { transform: scale(1.05); filter: grayscale(0%) contrast(1) brightness(1); }
+
+        #weapon-mount {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 140px;
+            height: 110px;
+            pointer-events: none;
+            z-index: 35;
+            transform-origin: bottom center;
+            transition: transform 0.08s linear;
+        }
+
+        @media (min-width: 768px) {
+            #weapon-mount { width: 200px; height: 160px; }
+        }
+
+        #weapon-recoil {
+            width: 100%;
+            height: 100%;
+            transform-origin: bottom center;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9));
+        }
+
+        #home.shooting #weapon-recoil {
+            animation: recoil 0.08s ease-out;
+        }
+
+        @keyframes recoil {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(12px) scale(0.98); }
+            100% { transform: translateY(0); }
+        }
+
+        #muzzle-flash {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,180,30,0.9) 30%, rgba(255,60,0,0) 70%);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 36;
+        }
+
+        #home.shooting #muzzle-flash {
+            opacity: 1;
+            transform: translateX(-50%) scale(1.3);
+            transition: opacity 0.03s ease, transform 0.03s ease;
+        }
+
+        #screen-flash {
+            position: absolute;
+            inset: 0;
+            background: #fff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 30;
+            transition: opacity 0.04s ease;
+        }
+        #home.shooting #screen-flash { opacity: 0.12; }
+
+        .target-mark {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 1.5px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 40;
+            transform: translate(-50%, -50%) scale(1);
+            animation: target-ping 0.4s ease-out forwards;
+        }
+        .target-mark::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 4px; height: 4px;
+            background: #ff3333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes target-ping {
+            0% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="font-roboto antialiased select-none">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 transition-all duration-300 bg-[#0a0a0a] md:bg-military-900/90 md:backdrop-blur-md border-b border-white/10" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <div class="flex-shrink-0 flex items-center">
+                    <!-- ЛОГОТИП В МЕНЮ (01.png) -->
+                    <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/100x100/171717/8a929a?text=108'" alt="108 Logo" class="h-10 w-10 sm:h-12 sm:w-12 object-contain mr-3 filter drop-shadow">
+                    <span class="font-oswald font-bold text-lg sm:text-xl tracking-wider text-military-accent uppercase">108 ДШБ</span>
+                </div>
+                
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-6">
+                        <a href="#home" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium font-oswald uppercase tracking-widest transition-colors">Главная</a>
+                        <a href="#about" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium font-oswald uppercase tracking-widest transition-colors">О полке</a>
+                        <a href="#arsenal" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium font-oswald uppercase tracking-widest transition-colors">Арсенал</a>
+                        <a href="#specialties" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium font-oswald uppercase tracking-widest transition-colors">Направления</a>
+                        <a href="#contact" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2 text-sm font-medium font-oswald uppercase tracking-widest transition-all">Присоединиться</a>
+                    </div>
+                </div>
+
+                <div class="-mr-2 flex md:hidden">
+                    <button type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white focus:outline-none" onclick="toggleMobileMenu()">
+                        <i class="fa-solid fa-bars text-xl" id="menu-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Мобильное меню -->
+        <div class="md:hidden hidden absolute top-full left-0 w-full bg-[#0a0a0a] border-b border-white/10 shadow-2xl z-50" id="mobile-menu">
+            <div class="px-4 pt-3 pb-6 space-y-3">
+                <a href="#home" onclick="toggleMobileMenu()" class="text-gray-300 hover:text-white block px-3 py-3 text-lg font-medium font-oswald uppercase border-b border-white/5">Главная</a>
+                <a href="#about" onclick="toggleMobileMenu()" class="text-gray-300 hover:text-white block px-3 py-3 text-lg font-medium font-oswald uppercase border-b border-white/5">О полке</a>
+                <a href="#arsenal" onclick="toggleMobileMenu()" class="text-gray-300 hover:text-white block px-3 py-3 text-lg font-medium font-oswald uppercase border-b border-white/5">Арсенал</a>
+                <a href="#specialties" onclick="toggleMobileMenu()" class="text-gray-300 hover:text-white block px-3 py-3 text-lg font-medium font-oswald uppercase border-b border-white/5">Направления</a>
+                <a href="#contact" onclick="toggleMobileMenu()" class="text-military-accent hover:text-white block px-3 py-3 text-lg font-medium font-oswald uppercase">Присоединиться</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="home" class="relative hero-height flex items-center justify-center overflow-hidden parallax-bg">
+        <div class="absolute inset-0 overlay-dark z-0"></div>
+        <div id="screen-flash"></div>
+
+        <div id="weapon-mount">
+            <div id="weapon-recoil">
+                <div id="muzzle-flash"></div>
+                <svg viewBox="0 0 200 160" class="w-full h-full">
+                    <path d="M 90 40 L 110 40 L 108 120 L 92 120 Z" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+                    <rect x="92" y="10" width="16" height="30" fill="#111" rx="2" stroke="#444" stroke-width="1"/>
+                    <line x1="88" y1="20" x2="112" y2="20" stroke="#000" stroke-width="3"/>
+                    <line x1="88" y1="28" x2="112" y2="28" stroke="#000" stroke-width="3"/>
+                    <polygon points="100,5 96,15 104,15" fill="#8a929a"/>
+                    <rect x="94" y="45" width="12" height="60" fill="#222"/>
+                    <path d="M 70 100 L 130 100 L 135 160 L 65 160 Z" fill="#262626" stroke="#444" stroke-width="2"/>
+                    <rect x="50" y="125" width="30" height="35" fill="#3a4035" rx="3" stroke="#222"/>
+                    <circle cx="65" cy="142" r="5" fill="#1a1a1a"/>
+                    <path d="M 125 105 Q 145 120 130 140" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center mt-12 sm:mt-16">
+            <!-- ГЛАВНЫЙ ЛОГОТИП (01.png) -->
+            <div class="w-40 h-40 sm:w-56 sm:h-56 mb-4" id="tiltLogo">
+                <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/400x400/0a0a0a/8a929a?text=108+ДШБ'" alt="108 Shield" class="w-full h-full object-contain filter drop-shadow-2xl">
+            </div>
+
+            <h1 class="font-oswald font-bold text-4xl sm:text-6xl lg:text-7xl tracking-tighter uppercase mb-3 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
+                108 Десантно-<br>Штурмовой Полк
+            </h1>
+            
+            <p class="text-sm sm:text-xl text-gray-400 max-w-2xl font-light tracking-wide mb-8">
+                Элита Вооруженных Сил. Мужество, Честь и Отвага.<br>
+                <span class="text-military-accent font-normal text-xs sm:text-base">Ведите пальцем по экрану для перемещения/прицеливания. Тап = Огонь.</span>
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto px-6 z-20 relative">
+                <a href="#about" class="w-full sm:w-auto text-center px-8 py-3.5 font-oswald font-bold text-white uppercase tracking-widest bg-white/5 border border-white/20 active:bg-white/20 transition-all text-sm">
+                    О полке
+                </a>
+                <a href="#specialties" class="w-full sm:w-auto text-center px-8 py-3.5 font-oswald font-bold text-military-900 uppercase tracking-widest bg-military-accent active:bg-white transition-all text-sm">
+                    Направления
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section id="about" class="py-16 sm:py-24 bg-military-900 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="reveal-left">
+                    <div class="img-container border border-white/10 shadow-2xl rounded-sm bg-black">
+                        <!-- ФОТО СОЛДАТА (02.png) -->
+                        <img src="02.png" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1595822317185-1d4cb800ba4e?q=80&w=1000&auto=format&fit=crop'" alt="Солдат" class="w-full h-auto object-cover aspect-[4/5] object-top">
+                    </div>
+                </div>
+                <div class="reveal-right">
+                    <h2 class="font-oswald text-3xl sm:text-5xl font-bold uppercase tracking-tight text-white mb-4">
+                        Никто кроме <span class="text-military-accent">нас</span>
+                    </h2>
+                    <div class="w-16 h-1 bg-military-accent mb-6"></div>
+                    <p class="text-gray-300 leading-relaxed mb-6 font-light text-base sm:text-lg">
+                        108-й отдельный десантно-штурмовой полк — подразделение, закаленное в боях. Мы выполняем задачи повышенной сложности в любых условиях. Наша стихия — внезапность, наш аргумент — огневая мощь, наша цель — победа.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Arsenal Section -->
+    <section id="arsenal" class="py-16 sm:py-24 bg-military-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-12 reveal">
+                <h2 class="font-oswald text-3xl sm:text-5xl font-bold uppercase tracking-tight text-white mb-3">Боевой <span class="text-military-accent">Арсенал</span></h2>
+                <div class="w-16 h-1 bg-military-accent mx-auto mb-4"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Качественные фото арсенала из интернета -->
+                <div class="group relative overflow-hidden bg-black reveal-left rounded-sm border border-white/10 aspect-video">
+                    <div class="img-container w-full h-full">
+                        <img src="https://images.unsplash.com/photo-1584852955938-f9d784a0d843?q=80&w=1000&auto=format&fit=crop" alt="Пулемет ПКМ" class="w-full h-full object-cover">
+                    </div>
+                    <div class="absolute bottom-4 left-4 right-4 p-4 bg-black/80 backdrop-blur-sm border border-white/10">
+                        <h3 class="font-oswald text-xl uppercase text-white">Тяжелое Вооружение</h3>
+                        <p class="text-xs text-gray-400">Мощная огневая поддержка на передовой.</p>
+                    </div>
+                </div>
+
+                <div class="group relative overflow-hidden bg-black reveal-right rounded-sm border border-white/10 aspect-video">
+                    <div class="img-container w-full h-full">
+                        <img src="https://images.unsplash.com/photo-1605335956037-ce50f38eb441?q=80&w=1000&auto=format&fit=crop" alt="Гранаты" class="w-full h-full object-cover">
+                    </div>
+                    <div class="absolute bottom-4 left-4 right-4 p-4 bg-black/80 backdrop-blur-sm border border-white/10">
+                        <h3 class="font-oswald text-xl uppercase text-white">Взрывчатые Вещества</h3>
+                        <p class="text-xs text-gray-400">Эффективное оружие ближнего боя и зачистки.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tactical Specialties Section (С качественными фото) -->
+    <section id="specialties" class="py-16 sm:py-24 bg-military-900 border-t border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-12 reveal">
+                <h2 class="font-oswald text-3xl sm:text-5xl font-bold uppercase tracking-tight text-white mb-3">Тактические <span class="text-military-accent">Направления</span></h2>
+                <div class="w-16 h-1 bg-military-accent mx-auto"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- БПЛА -->
+                <div class="group border border-white/10 bg-black/40 reveal overflow-hidden flex flex-col rounded-sm">
+                    <div class="img-container h-48 w-full border-b border-white/10">
+                        <img src="https://images.unsplash.com/photo-1527430253228-e93688616381?q=80&w=800&auto=format&fit=crop" alt="БПЛА" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <i class="fa-solid fa-plane-up text-3xl text-military-accent mb-3 group-hover:text-white transition-colors"></i>
+                        <h3 class="font-oswald text-xl uppercase mb-2 text-white">БПЛА / Разведка</h3>
+                        <p class="text-sm text-gray-400 font-light">Воздушная разведка, корректировка артиллерии и применение ударных дронов.</p>
+                    </div>
+                </div>
+
+                <!-- Спецназ -->
+                <div class="group border border-white/10 bg-black/40 reveal overflow-hidden flex flex-col rounded-sm">
+                    <div class="img-container h-48 w-full border-b border-white/10">
+                        <img src="https://images.unsplash.com/photo-1534346889984-7a918a2282de?q=80&w=800&auto=format&fit=crop" alt="Спецназ" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <i class="fa-solid fa-user-ninja text-3xl text-military-accent mb-3 group-hover:text-white transition-colors"></i>
+                        <h3 class="font-oswald text-xl uppercase mb-2 text-white">Спецназ</h3>
+                        <p class="text-sm text-gray-400 font-light">Выполнение специальных операций высокой сложности в тылу противника.</p>
+                    </div>
+                </div>
+
+                <!-- Штурмовики -->
+                <div class="group border border-white/10 bg-black/40 reveal overflow-hidden flex flex-col rounded-sm">
+                    <div class="img-container h-48 w-full border-b border-white/10">
+                        <img src="https://images.unsplash.com/photo-1595822317185-1d4cb800ba4e?q=80&w=800&auto=format&fit=crop" alt="Штурмовые Подразделения" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <i class="fa-solid fa-shield-halved text-3xl text-military-accent mb-3 group-hover:text-white transition-colors"></i>
+                        <h3 class="font-oswald text-xl uppercase mb-2 text-white">Штурмовые Подразделения</h3>
+                        <p class="text-sm text-gray-400 font-light">Зачистка и удержание важнейших укрепленных позиций и рубежей.</p>
+                    </div>
+                </div>
+
+                <!-- Квадроциклы -->
+                <div class="group border border-white/10 bg-black/40 reveal overflow-hidden flex flex-col rounded-sm">
+                    <div class="img-container h-48 w-full border-b border-white/10">
+                        <img src="https://images.unsplash.com/photo-1547633215-0b0431b9d4e5?q=80&w=800&auto=format&fit=crop" alt="Квадроциклы" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <i class="fa-solid fa-motorcycle text-3xl text-military-accent mb-3 group-hover:text-white transition-colors"></i>
+                        <h3 class="font-oswald text-xl uppercase mb-2 text-white">Водители Квадроциклов</h3>
+                        <p class="text-sm text-gray-400 font-light">Мобильные тактические группы на высокопроходимой технике.</p>
+                    </div>
+                </div>
+
+                <!-- Лодки -->
+                <div class="group border border-white/10 bg-black/40 reveal overflow-hidden flex flex-col rounded-sm">
+                    <div class="img-container h-48 w-full border-b border-white/10">
+                        <img src="https://images.unsplash.com/photo-1528150177508-7cc0c36cda5c?q=80&w=800&auto=format&fit=crop" alt="Боевые лодки" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <i class="fa-solid fa-ship text-3xl text-military-accent mb-3 group-hover:text-white transition-colors"></i>
+                        <h3 class="font-oswald text-xl uppercase mb-2 text-white">Водители Боевых Лодок</h3>
+                        <p class="text-sm text-gray-400 font-light">Форсирование речных преград, десантирование и поддержка с воды.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recruitment Form -->
+    <section id="contact" class="py-16 sm:py-24 bg-military-900">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
+            <h2 class="font-oswald text-3xl sm:text-5xl font-bold uppercase tracking-tight text-white mb-4">Встань в строй <span class="text-military-accent">108 Полка</span></h2>
+            
+            <form class="mt-8 bg-black/60 p-6 sm:p-8 border border-white/10 text-left shadow-2xl">
+                <div class="mb-5">
+                    <label class="block text-gray-400 text-xs font-oswald uppercase mb-2">Позывной / ФИО</label>
+                    <input class="w-full bg-military-800 border border-white/10 text-white px-4 py-3 focus:outline-none focus:border-military-accent text-sm" type="text" placeholder="Иванов И.И.">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-400 text-xs font-oswald uppercase mb-2">Контактный номер</label>
+                    <input class="w-full bg-military-800 border border-white/10 text-white px-4 py-3 focus:outline-none focus:border-military-accent text-sm" type="tel" value="+7" placeholder="+7 (___) ___-__-__">
+                </div>
+                <button type="button" class="w-full bg-military-accent active:bg-white text-military-900 font-oswald font-bold uppercase tracking-widest py-3.5 text-sm transition-all">
+                    Отправить рапорт
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black py-8 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center">
+                <!-- ЛОГОТИП В ФУТЕРЕ (01.png) -->
+                <img src="01.png" onerror="this.onerror=null; this.src='https://placehold.co/100x100/171717/8a929a?text=108'" alt="108 Logo" class="h-8 w-8 object-contain mr-3 opacity-60">
+                <span class="font-oswald text-gray-500 uppercase text-xs sm:text-sm">108 ДШБ © 2026</span>
+            </div>
+            <div>
+                <a href="https://t.me/vdvmetla" target="_blank" class="text-gray-400 hover:text-white text-xl">
+                    <i class="fa-brands fa-telegram"></i> @vdvmetla
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- ЗАГРУЗКА ФОНА (02.png) ---
+        const heroSection = document.getElementById('home');
+        const bgImg = new Image();
+        bgImg.src = '02.png'; 
+        bgImg.onload = () => { heroSection.style.backgroundImage = "url('02.png')"; };
+        bgImg.onerror = () => { heroSection.style.backgroundImage = "url('https://images.unsplash.com/photo-1595822317185-1d4cb800ba4e?q=80&w=2000')"; };
+
+        // --- МОБИЛЬНОЕ МЕНЮ ---
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('menu-icon');
+            menu.classList.toggle('hidden');
+            if (menu.classList.contains('hidden')) {
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            } else {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            }
+        }
+
+        // --- ЗВУК ВЫСТРЕЛА ---
+        function playSynthesizedGunshot() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                
+                const bufferSize = ctx.sampleRate * 0.25;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.2);
+
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.22);
+
+                noise.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+                noise.start();
+            } catch(e) {}
+        }
+
+        // --- ФИЗИКА ДВИЖЕНИЯ И ПРИЦЕЛИВАНИЯ ---
+        const hero = document.getElementById('home');
+        const weaponMount = document.getElementById('weapon-mount');
+
+        function updateAim(clientX, clientY) {
+            const screenCenterX = window.innerWidth / 2;
+            const screenBottomY = window.innerHeight;
+
+            const moveX = (clientX - screenCenterX) * 0.2; 
+            const moveY = (clientY - screenBottomY) * 0.15; 
+            
+            const pivotX = screenCenterX + moveX;
+            const pivotY = screenBottomY + moveY;
+
+            const deltaX = clientX - pivotX;
+            const deltaY = clientY - pivotY;
+            let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
+            
+            if (angle > 65) angle = 65;
+            if (angle < -65) angle = -65;
+
+            weaponMount.style.transform = `translateX(calc(-50% + ${moveX}px)) translateY(${moveY}px) rotate(${angle}deg)`;
+        }
+
+        function triggerFireEffect(x, y) {
+            hero.classList.add('shooting');
+            playSynthesizedGunshot();
+
+            const mark = document.createElement('div');
+            mark.className = 'target-mark';
+            mark.style.left = x + 'px';
+            mark.style.top = (y + window.scrollY) + 'px';
+            document.body.appendChild(mark);
+
+            setTimeout(() => mark.remove(), 400);
+            setTimeout(() => hero.classList.remove('shooting'), 80);
+        }
+
+        hero.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) updateAim(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+
+        hero.addEventListener('touchstart', (e) => {
+            if (e.target.closest('a, button, input')) return;
+            if (e.touches.length > 0) {
+                updateAim(e.touches[0].clientX, e.touches[0].clientY);
+                triggerFireEffect(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        hero.addEventListener('mousemove', (e) => updateAim(e.clientX, e.clientY));
+        
+        hero.addEventListener('mousedown', (e) => {
+            if (e.target.closest('a, button, input')) return;
+            triggerFireEffect(e.clientX, e.clientY);
+        });
+
+        // --- АНИМАЦИЯ ПОЯВЛЕНИЯ ЭЛЕМЕНТОВ ---
+        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        revealElements.forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
